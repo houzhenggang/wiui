@@ -1,0 +1,7 @@
+AUTOMAKE_OPTIONS=foreign
+SUBDIRS=plugins src
+
+CURRENTPATH=`pwd`
+INCLUDES=-I$(CURRENTPATH)/include
+export INCLUDES 
+
