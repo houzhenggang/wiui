@@ -1,0 +1,7 @@
+*.in
+*.swp
+*.o
+.deps
+autom4te.cache
+./config.*
+aclocal.m4
