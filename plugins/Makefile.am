@@ -1,4 +1,4 @@
-AUTOMAKE_OPTIONS=foreign
-noinst_LIBRARIES=libwiui-plugins.a
-libwiui-plugin_a_SOURCES=respeaker.c
-
+noinst_LIBRARIES=libwiui.a
+libwiui_a_SOURCES=respeaker.c
+libwiui_a_LDFLAGS=-D_GNU_SOURCE
+DEFS+=-D_GNU_SOURCE

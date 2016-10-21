@@ -1,24 +1,29 @@
-AC_INIT(wiui,[0.1.0],baozhu.zuo@foxmail.com)
-AC_CONFIG_AUX_DIR(plugins)
-AC_CONFIG_SRCDIR(src/main.c)
+#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
 
-
-AM_INIT_AUTOMAKE
-AX_CODE_COVERAGE
-
-AX_VALGRIND_CHECK
-AC_SUBST(VALGRIND_CHECK_RULES)
-
-LT_INIT 
+AC_PREREQ([2.69])
+AC_INIT(wiui, 0.0.1, baozhu.zuo@foxmail.com)
+AC_CONFIG_SRCDIR([mconf.c])
+AM_INIT_AUTOMAKE([-Wall foreign])
+# Checks for programs.
 AC_PROG_CC
 
-AC_CHECK_LIB([ncurses]) 
+# Checks for libraries.
+AC_CHECK_LIB([ncurses])
+AC_PROG_RANLIB
 
-AC_PROG_LIBTOOL
-AC_OUTPUT([
-  Makefile 
-  src/Makefile 
-  plugins/Makefile
-])
+# Checks for header files.
+AC_CHECK_HEADERS([fcntl.h libintl.h limits.h locale.h stdlib.h string.h unistd.h])
 
+# Checks for typedefs, structures, and compiler characteristics.
+AC_CHECK_HEADER_STDBOOL
+AC_TYPE_SIZE_T
 
+# Checks for library functions.
+AC_FUNC_MALLOC
+AC_CHECK_FUNCS([memset setlocale strcasecmp strchr strncasecmp strpbrk strspn])
+
+AC_CONFIG_FILES([Makefile
+                 plugins/Makefile
+                 src/Makefile])
+AC_OUTPUT
