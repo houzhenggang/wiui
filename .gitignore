@@ -14,4 +14,5 @@ depcomp
 install-sh
 missing
 plugins/libwiui.a
+src/wiui
 
