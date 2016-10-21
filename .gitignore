@@ -1,7 +1,17 @@
 *.in
 *.swp
 *.o
+*.log
 .deps
 autom4te.cache
 ./config.*
 aclocal.m4
+Makefile
+config.status
+compile
+configure
+depcomp
+install-sh
+missing
+plugins/libwiui.a
+
