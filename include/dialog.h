@@ -31,11 +31,8 @@
 #include <stdarg.h>
 #include <signal.h>
 #include <locale.h>
-#ifndef KBUILD_NO_NLS
-# include <libintl.h>
-#else
-# define gettext(Msgid) ((const char *) (Msgid))
-#endif
+
+#define gettext(Msgid) ((const char *) (Msgid))
 
 /*
  * Colors in ncurses 1.9.9e do not work properly since foreground and

@@ -12,7 +12,7 @@ AC_CHECK_LIB([ncurses])
 AC_PROG_RANLIB
 
 # Checks for header files.
-AC_CHECK_HEADERS([fcntl.h libintl.h limits.h locale.h stdlib.h string.h unistd.h])
+AC_CHECK_HEADERS([fcntl.h limits.h locale.h stdlib.h string.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_CHECK_HEADER_STDBOOL
