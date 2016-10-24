@@ -3,7 +3,6 @@
 
 AC_PREREQ([2.69])
 AC_INIT(wiui, 0.0.1, baozhu.zuo@foxmail.com)
-AC_CONFIG_SRCDIR([mconf.c])
 AM_INIT_AUTOMAKE([-Wall foreign])
 # Checks for programs.
 AC_PROG_CC
