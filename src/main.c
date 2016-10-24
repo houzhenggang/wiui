@@ -1,4 +1,5 @@
 #include "dialog.h"
+#include "wiui.h"
 
 static void sig_handler(int signo)
 {
@@ -9,9 +10,14 @@ static void sig_handler(int signo)
 int main() {
     int s_scroll = 0;
     int ret;
+    struct wifi_describe* wifi_table = (struct wifi_describe*) calloc(1, sizeof(struct wifi_describe));
+    wiui *w;
     setlocale(LC_ALL, "");
     signal(SIGINT, sig_handler);
     
+    w = get_wifi();
+    w->scan(wifi_table);
+     
 	if (init_dialog(NULL)) {
 		fprintf(stderr, "Your display is too small to run wiui!\n");
 		fprintf(stderr, "It must be at least 19 lines by 80 columns.\n");
@@ -33,5 +39,7 @@ int main() {
 		ret = getch();
 	} while (ret == KEY_ESC);
     end_dialog(0, 0);
+
+    free(w);
     return 0;
 }
