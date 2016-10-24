@@ -25,17 +25,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-
+#include <ncurses.h>
+#include <errno.h>
+#include <limits.h>
+#include <stdarg.h>
+#include <signal.h>
+#include <locale.h>
 #ifndef KBUILD_NO_NLS
 # include <libintl.h>
 #else
 # define gettext(Msgid) ((const char *) (Msgid))
 #endif
-
-#ifdef __sun__
-#define CURS_MACROS
-#endif
-#include CURSES_LOC
 
 /*
  * Colors in ncurses 1.9.9e do not work properly since foreground and
@@ -64,31 +64,31 @@
 
 #ifndef ACS_ULCORNER
 #define ACS_ULCORNER '+'
-#endif
+#endif  
 #ifndef ACS_LLCORNER
 #define ACS_LLCORNER '+'
-#endif
+#endif  
 #ifndef ACS_URCORNER
 #define ACS_URCORNER '+'
-#endif
+#endif  
 #ifndef ACS_LRCORNER
 #define ACS_LRCORNER '+'
-#endif
+#endif  
 #ifndef ACS_HLINE
 #define ACS_HLINE '-'
-#endif
+#endif  
 #ifndef ACS_VLINE
 #define ACS_VLINE '|'
-#endif
+#endif  
 #ifndef ACS_LTEE
 #define ACS_LTEE '+'
-#endif
+#endif  
 #ifndef ACS_RTEE
 #define ACS_RTEE '+'
-#endif
+#endif  
 #ifndef ACS_UARROW
 #define ACS_UARROW '^'
-#endif
+#endif  
 #ifndef ACS_DARROW
 #define ACS_DARROW 'v'
 #endif
@@ -111,6 +111,16 @@ struct subtitle_list {
 	const char *text;
 };
 
+struct dielog_border {
+    chtype left_b;
+    chtype right_b;
+    chtype top_b;
+    chtype bottom_b;
+    chtype top_left_p;
+    chtype top_right_p;
+    chtype bottom_left_p;
+    chtype bottom_right_p;
+};
 struct dialog_info {
 	const char *backtitle;
 	struct subtitle_list *subtitles;
@@ -223,8 +233,8 @@ void dialog_clear(void);
 void print_autowrap(WINDOW * win, const char *prompt, int width, int y, int x);
 void print_button(WINDOW * win, const char *label, int y, int x, int selected);
 void print_title(WINDOW *dialog, const char *title, int width);
-void draw_box(WINDOW * win, int y, int x, int height, int width, chtype box,
-	      chtype border);
+void draw_box(WINDOW *win, int y, int x, int height, int width,
+               struct dielog_border box, chtype box_a, chtype border);
 void draw_shadow(WINDOW * win, int y, int x, int height, int width);
 
 int first_alpha(const char *string, const char *exempt);
