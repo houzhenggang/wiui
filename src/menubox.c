@@ -119,14 +119,20 @@ static void print_arrows(WINDOW * win, int item_no, int scroll, int y, int x,
 
 	if (scroll > 0) {
 		wattrset(win, dlg.uarrow.atr);
-		waddch(win, ACS_UARROW);
+		waddch(win, '^');
 		waddstr(win, "(-)");
 	} else {
 		wattrset(win, dlg.menubox.atr);
-		waddch(win, ACS_HLINE);
-		waddch(win, ACS_HLINE);
-		waddch(win, ACS_HLINE);
-		waddch(win, ACS_HLINE);
+#if 0
+		waddch(win, '_');
+		waddch(win, '_');
+		waddch(win, '_');
+		waddch(win, '_');
+		waddch(win, '_');
+		waddch(win, '_');
+		waddch(win, '_');
+		waddch(win, '_');
+#endif
 	}
 
 	y = y + height + 1;
@@ -135,14 +141,20 @@ static void print_arrows(WINDOW * win, int item_no, int scroll, int y, int x,
 
 	if ((height < item_no) && (scroll + height < item_no)) {
 		wattrset(win, dlg.darrow.atr);
-		waddch(win, ACS_DARROW);
+		waddch(win, 'v');
 		waddstr(win, "(+)");
 	} else {
 		wattrset(win, dlg.menubox_border.atr);
-		waddch(win, ACS_HLINE);
-		waddch(win, ACS_HLINE);
-		waddch(win, ACS_HLINE);
-		waddch(win, ACS_HLINE);
+#if 0
+		waddch(win, '_');
+		waddch(win, '_');
+		waddch(win, '_');
+		waddch(win, '_');
+		waddch(win, '_');
+		waddch(win, '_');
+		waddch(win, '_');
+		waddch(win, '_');
+#endif
 	}
 
 	wmove(win, cur_y, cur_x);
@@ -159,9 +171,6 @@ static void print_buttons(WINDOW * win, int height, int width, int selected)
 
 	print_button(win, gettext("Select"), y, x, selected == 0);
 	print_button(win, gettext(" Exit "), y, x + 12, selected == 1);
-	print_button(win, gettext(" Help "), y, x + 24, selected == 2);
-	print_button(win, gettext(" Save "), y, x + 36, selected == 3);
-	print_button(win, gettext(" Load "), y, x + 48, selected == 4);
 
 	wmove(win, y, x + 1 + 12 * selected);
 	wrefresh(win);
@@ -186,9 +195,21 @@ int dialog_menu(const char *title, const char *prompt,
 {
 	int i, j, x, y, box_x, box_y;
 	int height, width, menu_height;
+    int show_box_height,show_box_width,show_box_x,show_box_y;
+
 	int key = 0, button = 0, scroll = 0, choice = 0;
 	int first_item =  0, max_choice;
-	WINDOW *dialog, *menu;
+    WINDOW *dialog, *menu, *show_box;
+    struct dielog_border box_border = { 
+        .top_left_p = ' ',
+        .bottom_left_p = ' ',
+        .top_right_p = ' ',
+        .bottom_right_p =  ' ',
+        .top_b = ' ',
+        .bottom_b = ' ', 
+        .left_b = ' ',       
+        .right_b  = ' '
+    };
 
 do_resize:
 	height = getmaxy(stdscr);
@@ -211,38 +232,57 @@ do_resize:
 	dialog = newwin(height, width, y, x);
 	keypad(dialog, TRUE);
 
-	draw_box(dialog, 0, 0, height, width,
-		 dlg.dialog.atr, dlg.border.atr);
+	draw_box(dialog, 0, 0, height, width,box_border,
+             dlg.dialog.atr, dlg.border.atr);
 	wattrset(dialog, dlg.border.atr);
-	mvwaddch(dialog, height - 3, 0, ACS_LTEE);
+
+	mvwaddch(dialog, height - 3, 0, ' ');
+
 	for (i = 0; i < width - 2; i++)
-		waddch(dialog, ACS_HLINE);
+		waddch(dialog, ' ');
+
 	wattrset(dialog, dlg.dialog.atr);
 	wbkgdset(dialog, dlg.dialog.atr & A_COLOR);
-	waddch(dialog, ACS_RTEE);
+
+	waddch(dialog, ' ');
 
 	print_title(dialog, title, width);
 
 	wattrset(dialog, dlg.dialog.atr);
 	print_autowrap(dialog, prompt, width - 2, 1, 3);
 
-	menu_width = width - 6;
+	menu_width = (width - 6);
 	box_y = height - menu_height - 5;
 	box_x = (width - menu_width) / 2 - 1;
 
 	/* create new window for the menu */
-	menu = subwin(dialog, menu_height, menu_width,
+	menu = subwin(dialog, menu_height, menu_width/2,
 		      y + box_y + 1, x + box_x + 1);
 	keypad(menu, TRUE);
-
+    box_border.left_b = ' '; 
+    box_border.right_b = '|';                   
 	/* draw a box around the menu items */
-	draw_box(dialog, box_y, box_x, menu_height + 2, menu_width + 2,
-		 dlg.menubox_border.atr, dlg.menubox.atr);
+	draw_box(dialog, box_y, box_x, menu_height + 2, (menu_width + 4)/2,box_border,
+             dlg.menubox_border.atr, dlg.menubox.atr);
 
 	if (menu_width >= 80)
 		item_x = (menu_width - 70) / 2;
 	else
 		item_x = 4;
+#if 1
+    /* create new box for show the select detail*/
+    show_box_height = menu_height + 2;
+    show_box_width = menu_width / 2;
+    show_box_y =  y + box_y - 2;
+    show_box_x =  x + box_x + show_box_width ;
+    show_box = subwin(dialog, show_box_height, show_box_width, show_box_y
+                      , show_box_x); 
+    keypad(show_box, TRUE);
+    box_border.left_b = '|';
+    box_border.right_b = ' ';
+    draw_box(dialog, show_box_y, show_box_x, show_box_height, show_box_width ,
+             box_border,dlg.menubox_border.atr, dlg.menubox.atr);
+#endif
 
 	/* Set choice to default item */
 	item_foreach()
@@ -375,7 +415,7 @@ do_resize:
 		case TAB:
 		case KEY_RIGHT:
 			button = ((key == KEY_LEFT ? --button : ++button) < 0)
-			    ? 4 : (button > 4 ? 0 : button);
+			    ? 2 : (button > 2 ? 0 : button);
 
 			print_buttons(dialog, height, width, button);
 			wrefresh(menu);
