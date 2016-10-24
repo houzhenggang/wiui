@@ -54,7 +54,7 @@ int dialog_inputbox(const char *title, const char *prompt, int height, int width
 		instr[0] = '\0';
 	else
 		strcpy(instr, init);
-
+    struct dielog_border box_border;
 do_resize:
 	if (getmaxy(stdscr) <= (height - INPUTBOX_HEIGTH_MIN))
 		return -ERRDISPLAYTOOSMALL;
@@ -70,8 +70,7 @@ do_resize:
 	dialog = newwin(height, width, y, x);
 	keypad(dialog, TRUE);
 
-	draw_box(dialog, 0, 0, height, width,
-		 dlg.dialog.atr, dlg.border.atr);
+	draw_box(dialog, 0, 0, height, width,box_border,dlg.dialog.atr, dlg.border.atr);
 	wattrset(dialog, dlg.border.atr);
 	mvwaddch(dialog, height - 3, 0, ACS_LTEE);
 	for (i = 0; i < width - 2; i++)
@@ -89,8 +88,7 @@ do_resize:
 	getyx(dialog, y, x);
 	box_y = y + 2;
 	box_x = (width - box_width) / 2;
-	draw_box(dialog, y + 1, box_x - 1, 3, box_width + 2,
-		 dlg.dialog.atr, dlg.border.atr);
+	draw_box(dialog, y + 1, box_x - 1, 3, box_width + 2,box_border,dlg.dialog.atr, dlg.border.atr);
 
 	print_buttons(dialog, height, width, 0);
 

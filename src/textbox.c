@@ -77,7 +77,7 @@ int dialog_textbox(const char *title, char *tbuf, int initial_height,
 	}
 	if (_hscroll)
 		hscroll = *_hscroll;
-
+    struct dielog_border box_border;
 do_resize:
 	getmaxyx(stdscr, height, width);
 	if (height < TEXTBOX_HEIGTH_MIN || width < TEXTBOX_WIDTH_MIN)
@@ -116,8 +116,7 @@ do_resize:
 	keypad(box, TRUE);
 
 	/* register the new window, along with its borders */
-	draw_box(dialog, 0, 0, height, width,
-		 dlg.dialog.atr, dlg.border.atr);
+	draw_box(dialog, 0, 0, height, width,box_border,dlg.dialog.atr, dlg.border.atr);
 
 	wattrset(dialog, dlg.border.atr);
 	mvwaddch(dialog, height - 3, 0, ACS_LTEE);

@@ -22,7 +22,6 @@
  */
 
 #include "dialog.h"
-
 static int list_width, check_x, item_x;
 
 /*
@@ -130,6 +129,7 @@ int dialog_checklist(const char *title, const char *prompt, int height,
 			break;
 		}
 	}
+    struct dielog_border box_border;
 
 do_resize:
 	if (getmaxy(stdscr) < (height + CHECKLIST_HEIGTH_MIN))
@@ -148,8 +148,7 @@ do_resize:
 	dialog = newwin(height, width, y, x);
 	keypad(dialog, TRUE);
 
-	draw_box(dialog, 0, 0, height, width,
-		 dlg.dialog.atr, dlg.border.atr);
+	draw_box(dialog, 0, 0, height, width,box_border,dlg.dialog.atr, dlg.border.atr);
 	wattrset(dialog, dlg.border.atr);
 	mvwaddch(dialog, height - 3, 0, ACS_LTEE);
 	for (i = 0; i < width - 2; i++)
@@ -174,7 +173,7 @@ do_resize:
 
 	/* draw a box around the list items */
 	draw_box(dialog, box_y, box_x, list_height + 2, list_width + 2,
-		 dlg.menubox_border.atr, dlg.menubox.atr);
+		 box_border,dlg.menubox_border.atr, dlg.menubox.atr);
 
 	/* Find length of longest item in order to center checklist */
 	check_x = 0;

@@ -475,7 +475,7 @@ void print_button(WINDOW * win, const char *label, int y, int x, int selected)
  */
 void
 draw_box(WINDOW * win, int y, int x, int height, int width,
-	 chtype box, chtype border)
+         struct dielog_border box,chtype box_a, chtype border)
 {
 	int i, j;
 
@@ -484,23 +484,23 @@ draw_box(WINDOW * win, int y, int x, int height, int width,
 		wmove(win, y + i, x);
 		for (j = 0; j < width; j++)
 			if (!i && !j)
-				waddch(win, border | ACS_ULCORNER);
+                waddch(win, border|box.top_left_p ); 
 			else if (i == height - 1 && !j)
-				waddch(win, border | ACS_LLCORNER);
+                waddch(win, border|box.bottom_left_p ); 
 			else if (!i && j == width - 1)
-				waddch(win, box | ACS_URCORNER);
+                waddch(win,box_a| box.top_right_p); 
 			else if (i == height - 1 && j == width - 1)
-				waddch(win, box | ACS_LRCORNER);
+                waddch(win,box_a| box.bottom_right_p); 
 			else if (!i)
-				waddch(win, border | ACS_HLINE);
+                waddch(win,border| box.top_b ); 
 			else if (i == height - 1)
-				waddch(win, box | ACS_HLINE);
+                waddch(win, box_a| box.bottom_b ); 
 			else if (!j)
-				waddch(win, border | ACS_VLINE);
+				waddch(win, border|box.left_b );
 			else if (j == width - 1)
-				waddch(win, box | ACS_VLINE);
+                waddch(win, box_a|box.right_b); 
 			else
-				waddch(win, box | ' ');
+				waddch(win, box_a|' ');
 	}
 }
 

@@ -44,6 +44,7 @@ int dialog_yesno(const char *title, const char *prompt, int height, int width)
 	int i, x, y, key = 0, button = 0;
 	WINDOW *dialog;
 
+    struct dielog_border box_border;
 do_resize:
 	if (getmaxy(stdscr) < (height + YESNO_HEIGTH_MIN))
 		return -ERRDISPLAYTOOSMALL;
@@ -59,8 +60,8 @@ do_resize:
 	dialog = newwin(height, width, y, x);
 	keypad(dialog, TRUE);
 
-	draw_box(dialog, 0, 0, height, width,
-		 dlg.dialog.atr, dlg.border.atr);
+	draw_box(dialog, 0, 0, height, width,box_border,dlg.dialog.atr, dlg.border.atr);
+
 	wattrset(dialog, dlg.border.atr);
 	mvwaddch(dialog, height - 3, 0, ACS_LTEE);
 	for (i = 0; i < width - 2; i++)
