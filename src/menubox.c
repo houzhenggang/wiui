@@ -58,8 +58,9 @@
 
 #include "dialog.h"
 
-static int menu_width, item_x;
+static int menu_width,menu_height,item_x;
 
+static    WINDOW *dialog, *menu, *show_box;
 /*
  * Print menu item
  */
@@ -99,12 +100,17 @@ static void do_print_item(WINDOW * win, const char *item, int line_y,
 	wrefresh(win);
 }
 
-#define print_item(index, choice, selected)				\
-do {									\
-	item_set(index);						\
-	do_print_item(menu, item_str(), choice, selected, !item_is_tag(':')); \
-} while (0)
 
+void print_item(int index, int choice,int  selected) {
+    item_set(index);
+    do_print_item(menu, item_str(), choice, selected, !item_is_tag(':'));
+}
+void fresh_menu() {
+    wnoutrefresh(menu);
+}
+void get_menu_height() {
+    return menu_height;
+}
 /*
  * Print the scroll indicators.
  */
@@ -194,12 +200,11 @@ int dialog_menu(const char *title, const char *prompt,
 		const void *selected, int *s_scroll)
 {
 	int i, j, x, y, box_x, box_y;
-	int height, width, menu_height;
+    int height, width;
     int show_box_height,show_box_width,show_box_x,show_box_y;
 
 	int key = 0, button = 0, scroll = 0, choice = 0;
 	int first_item =  0, max_choice;
-    WINDOW *dialog, *menu, *show_box;
     struct dielog_border box_border = { 
         .top_left_p = ' ',
         .bottom_left_p = ' ',
@@ -434,6 +439,7 @@ do_resize:
 			*s_scroll = scroll;
 			delwin(menu);
 			delwin(dialog);
+            delwin(show_box);
 			item_set(scroll + choice);
 			item_set_selected(1);
 			switch (key) {
@@ -468,10 +474,12 @@ do_resize:
 			on_key_resize();
 			delwin(menu);
 			delwin(dialog);
+            delwin(show_box);
 			goto do_resize;
 		}
 	}
 	delwin(menu);
 	delwin(dialog);
+    delwin(show_box);
 	return key;		/* ESC pressed */
 }
