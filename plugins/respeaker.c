@@ -88,6 +88,7 @@ static void wifi_site_survey(const char *ifname, const char *essid, int print) {
 
     line = strtok((char *)start, "\n");
     line = strtok(NULL, "\n");
+    
     wifi_count = 0;
     while (line && (wifi_count < 64)) {
         next_field(&line, st[wifi_count].channel, sizeof(st->channel));
@@ -100,8 +101,8 @@ static void wifi_site_survey(const char *ifname, const char *essid, int print) {
         if (st[wifi_count].crypto) {
             *st[wifi_count].crypto = '\0';
             st[wifi_count].crypto++;
-            syslog(LOG_INFO, "Found network - %s %s %s %s %s\n",
-                   st[wifi_count].channel, st[wifi_count].ssid, st[wifi_count].bssid, st[wifi_count].security, st[wifi_count].siganl);
+            //syslog(LOG_INFO, "Found network - %s %s %s %s %s\n",
+            //       st[wifi_count].channel, st[wifi_count].ssid, st[wifi_count].bssid, st[wifi_count].security, st[wifi_count].siganl);
         } else {
             st[wifi_count].crypto = "";
         }
@@ -113,10 +114,22 @@ out:
     free(s);
 }
 
-int respeaker_scan(struct wifi_describe *wifi) {
+struct wifi_describe * respeaker_scan(int *count) {
+    int i;
     wifi_site_survey("ra0",NULL,0);
-    wifi = st;
-    return  wifi_count;
+    struct wifi_describe *wifi_log;
+    struct wifi_describe *wifi = (struct wifi_describe *)malloc(wifi_count * (sizeof(struct wifi_describe)));
+    memcpy(wifi, st, wifi_count * (sizeof(struct wifi_describe))); 
+    wifi_log = wifi;
+#if 1
+    for (i = 0; i < wifi_count; i++) {
+        syslog(LOG_INFO, "Found network - %s %s %s %s %s\n",
+       wifi_log->channel, wifi_log->ssid, wifi_log->bssid, wifi_log->security, wifi_log->siganl);
+        wifi_log++;
+    }
+#endif
+    *count = wifi_count;
+    return  wifi;
 }
 
 int respeaker_connect(const char *ssid, const char *passwd) {

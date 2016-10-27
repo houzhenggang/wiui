@@ -26,15 +26,15 @@ enum {
 
 struct wifi_describe{
     char channel[4];
-    char ssid[33];
+    char ssid[32];
     char bssid[20];
     char security[23];
     char *crypto;
-    char siganl[8];
+    char siganl[9];
 };
 
 typedef  struct {
-    int (*scan)(struct wifi_describe *wifi);
+    struct wifi_describe* (*scan)(int *count);
     int (*connect)(const char* ssid,const char* passwd);
 }wiui;
 wiui* get_wifi();

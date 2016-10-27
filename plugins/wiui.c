@@ -1,5 +1,5 @@
 #include "wiui.h"
-
+#include <stdio.h>
 char* wiui_file_unglob(const char* filename)
 {
     glob_t results;
@@ -140,3 +140,27 @@ wiui* get_wifi() {
     }
     
 }
+#if 0
+int main() {
+
+    struct wifi_describe* wifi_table;
+    wiui *w; 
+    int wifi_table_length = 3;
+    int max_choice;
+    int n;
+
+    w = get_wifi();
+    wifi_table = (*w->scan)(&wifi_table_length);
+
+    printf("wifi_table_length:%d\n",wifi_table_length);
+    for (n = 0; n < wifi_table_length; n++) {
+        //printf("main-> %s<=>%s<=>%s<=>%s<=>%s\n",
+        //wifi_table->channel, wifi_table->ssid, wifi_table->bssid, wifi_table->security, wifi_table->siganl);
+        printf("main-> %s<=>%s\n",
+               wifi_table->ssid, wifi_table->security);
+        wifi_table++;
+    }
+
+    return 0;
+}
+#endif
