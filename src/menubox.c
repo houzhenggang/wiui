@@ -57,7 +57,7 @@
  */
 
 #include "dialog.h"
-
+#include <syslog.h>
 static int menu_width,menu_height,item_x;
 
 static    WINDOW *dialog, *menu, *show_box;
@@ -106,9 +106,14 @@ void print_item(int index, int choice,int  selected) {
     do_print_item(menu, item_str(), choice, selected, !item_is_tag(':'));
 }
 void fresh_menu() {
+
     wnoutrefresh(menu);
+
+    //wmove(menu, 0, 1);
+	//wrefresh(menu);
 }
-void get_menu_height() {
+
+int get_menu_height() {
     return menu_height;
 }
 /*
@@ -288,20 +293,24 @@ do_resize:
     draw_box(dialog, show_box_y, show_box_x, show_box_height, show_box_width ,
              box_border,dlg.menubox_border.atr, dlg.menubox.atr);
 #endif
-
+#if 1
 	/* Set choice to default item */
 	item_foreach()
 		if (selected && (selected == item_data()))
 			choice = item_n();
+
 	/* get the saved scroll info */
 	scroll = *s_scroll;
 	if ((scroll <= choice) && (scroll + max_choice > choice) &&
 	   (scroll >= 0) && (scroll + max_choice <= item_count())) {
 		first_item = scroll;
 		choice = choice - scroll;
+        syslog(LOG_INFO, "first_item:%d  choice:%d \n", first_item, choice);
 	} else {
 		scroll = 0;
 	}
+    syslog(LOG_INFO, "max_choice:%d  item_count:%d choice: %d\n", max_choice, item_count(),choice);
+
 	if ((choice >= max_choice)) {
 		if (choice >= item_count() - max_choice / 2)
 			scroll = first_item = item_count() - max_choice;
@@ -314,13 +323,14 @@ do_resize:
 	for (i = 0; i < max_choice; i++) {
 		print_item(first_item + i, i, i == choice);
 	}
-
+#endif
 	wnoutrefresh(menu);
 
 	print_arrows(dialog, item_count(), scroll,
 		     box_y, box_x + item_x + 1, menu_height);
 
 	print_buttons(dialog, height, width, 0);
+
 	wmove(menu, choice, item_x + 1);
 	wrefresh(menu);
 
@@ -362,12 +372,13 @@ do_resize:
 					do_scroll(menu, &scroll, -1);
 
 					print_item(scroll, 0, FALSE);
+                    syslog(LOG_INFO, "KEY_UP:%d", scroll ); 
 				} else
 					choice = MAX(choice - 1, 0);
 
 			} else if (key == KEY_DOWN || key == '+') {
 				print_item(scroll+choice, choice, FALSE);
-
+                syslog(LOG_INFO, "KEY_DOWN:%d  %d ", scroll + choice, choice); 
 				if ((choice > max_choice - 3) &&
 				    (scroll + max_choice < item_count())) {
 					/* Scroll menu up */
