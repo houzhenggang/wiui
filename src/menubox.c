@@ -220,7 +220,9 @@ int dialog_menu(const char *title, const char *prompt,
         .left_b = ' ',       
         .right_b  = ' '
     };
-
+    char password[255] ;
+    char password_title[255] ;
+    memset(password,0,255); 
 do_resize:
 	height = getmaxy(stdscr);
 	width = getmaxx(stdscr);
@@ -340,24 +342,6 @@ do_resize:
 		if (key < 256 && isalpha(key))
 			key = tolower(key);
 
-		if (strchr("ynmh", key))
-			i = max_choice;
-		else {
-			for (i = choice + 1; i < max_choice; i++) {
-				item_set(scroll + i);
-				j = first_alpha(item_str(), "YyNnMmHh");
-				if (key == tolower(item_str()[j]))
-					break;
-			}
-			if (i == max_choice)
-				for (i = 0; i < max_choice; i++) {
-					item_set(scroll + i);
-					j = first_alpha(item_str(), "YyNnMmHh");
-					if (key == tolower(item_str()[j]))
-						break;
-				}
-		}
-
 		if (item_count() != 0 &&
 		    (i < max_choice ||
 		     key == KEY_UP || key == KEY_DOWN ||
@@ -425,10 +409,8 @@ do_resize:
 
 			continue;	/* wait for another key press */
 		}
-
 		switch (key) {
 		case KEY_LEFT:
-		case TAB:
 		case KEY_RIGHT:
 			button = ((key == KEY_LEFT ? --button : ++button) < 0)
 			    ? 2 : (button > 2 ? 0 : button);
@@ -436,57 +418,25 @@ do_resize:
 			print_buttons(dialog, height, width, button);
 			wrefresh(menu);
 			break;
-		case ' ':
-		case 's':
-		case 'y':
-		case 'n':
-		case 'm':
-		case '/':
-		case 'h':
-		case '?':
-		case 'z':
-		case '\n':
-			/* save scroll info */
-			*s_scroll = scroll;
-			delwin(menu);
-			delwin(dialog);
-            delwin(show_box);
-			item_set(scroll + choice);
-			item_set_selected(1);
-			switch (key) {
-			case 'h':
-			case '?':
-				return 2;
-			case 's':
-			case 'y':
-				return 5;
-			case 'n':
-				return 6;
-			case 'm':
-				return 7;
-			case ' ':
-				return 8;
-			case '/':
-				return 9;
-			case 'z':
-				return 10;
-			case '\n':
-				return button;
-			}
-			return 0;
-		case 'e':
-		case 'x':
-			key = KEY_ESC;
-			break;
-		case KEY_ESC:
-			key = on_key_esc(menu);
-			break;
-		case KEY_RESIZE:
+
+        case 10:
+        case KEY_ENTER:
+            sprintf(password_title,"Password for %s",item_str());  
+            dialog_inputbox(NULL, password_title, 7, 45, password); 
+            syslog(LOG_INFO, "%s\n", dialog_input_result);
+            wnoutrefresh(dialog);
+            wrefresh(show_box);
+            
+
+
+            break;
+        case 'q':
 			on_key_resize();
 			delwin(menu);
 			delwin(dialog);
             delwin(show_box);
-			goto do_resize;
+            key = KEY_ESC;
+            break;
 		}
 	}
 	delwin(menu);

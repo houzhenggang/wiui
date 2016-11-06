@@ -27,12 +27,12 @@ void *scan_func(void *arg)
     }
     syslog(LOG_INFO, "main: -wifi_table_length:%d \n", wifi_table_length);
     max_choice = MIN(get_menu_height(), item_count());
-
 	/* Print the menu */
 	for (n = 0; n < max_choice; n++) {
 		print_item(n, n, 0);
 	}
     fresh_menu();
+
     free(w);
     free(wifi_table);
     return ((void *)0);  
@@ -59,12 +59,8 @@ int main() {
     item_set_tag('m');
 
 
-
     dialog_menu("WIUI visible","Please set up your wifi !",NULL,&s_scroll);
 
-	do {
-		ret = getch();
-	} while (ret == KEY_ESC);
     end_dialog(0, 0);
 
     return 0;

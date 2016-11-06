@@ -20,7 +20,7 @@
  */
 
 #include "dialog.h"
-
+#include <syslog.h>
 char dialog_input_result[MAX_LEN + 1];
 
 /*
@@ -28,11 +28,10 @@ char dialog_input_result[MAX_LEN + 1];
  */
 static void print_buttons(WINDOW * dialog, int height, int width, int selected)
 {
-	int x = width / 2 - 11;
+	int x = width / 2 - 5;
 	int y = height - 2;
 
 	print_button(dialog, gettext("  Ok  "), y, x, selected == 0);
-	print_button(dialog, gettext(" Help "), y, x + 14, selected == 1);
 
 	wmove(dialog, y, x + 1 + 14 * selected);
 	wrefresh(dialog);
@@ -54,7 +53,16 @@ int dialog_inputbox(const char *title, const char *prompt, int height, int width
 		instr[0] = '\0';
 	else
 		strcpy(instr, init);
-    struct dielog_border box_border;
+    struct dielog_border box_border = { 
+        .top_left_p = ' ',
+        .bottom_left_p = ' ',
+        .top_right_p = ' ',
+        .bottom_right_p =  ' ',
+        .top_b = '_',
+        .bottom_b = '_', 
+        .left_b = ' ',       
+        .right_b  = ' '
+    };
 do_resize:
 	if (getmaxy(stdscr) <= (height - INPUTBOX_HEIGTH_MIN))
 		return -ERRDISPLAYTOOSMALL;
@@ -62,21 +70,21 @@ do_resize:
 		return -ERRDISPLAYTOOSMALL;
 
 	/* center dialog box on screen */
-	x = (getmaxx(stdscr) - width) / 2;
+	x = (getmaxx(stdscr) - width)*3 / 4;
 	y = (getmaxy(stdscr) - height) / 2;
 
-	draw_shadow(stdscr, y, x, height, width);
+	//draw_shadow(stdscr, y, x, height, width);
 
 	dialog = newwin(height, width, y, x);
 	keypad(dialog, TRUE);
 
 	draw_box(dialog, 0, 0, height, width,box_border,dlg.dialog.atr, dlg.border.atr);
 	wattrset(dialog, dlg.border.atr);
-	mvwaddch(dialog, height - 3, 0, ACS_LTEE);
+	mvwaddch(dialog, height - 3, 0, ' ');
 	for (i = 0; i < width - 2; i++)
-		waddch(dialog, ACS_HLINE);
+		waddch(dialog, ' ');
 	wattrset(dialog, dlg.dialog.atr);
-	waddch(dialog, ACS_RTEE);
+	waddch(dialog, ' ');
 
 	print_title(dialog, title, width);
 
@@ -88,7 +96,9 @@ do_resize:
 	getyx(dialog, y, x);
 	box_y = y + 2;
 	box_x = (width - box_width) / 2;
-	draw_box(dialog, y + 1, box_x - 1, 3, box_width + 2,box_border,dlg.dialog.atr, dlg.border.atr);
+    box_border.top_b = ' ';
+    box_border.bottom_b = ' ';
+	draw_box(dialog, y + 1, box_x - 1, 2, box_width + 2,box_border,dlg.dialog.atr, dlg.border.atr);
 
 	print_buttons(dialog, height, width, 0);
 
@@ -121,9 +131,10 @@ do_resize:
 			switch (key) {
 			case TAB:
 			case KEY_UP:
-			case KEY_DOWN:
-				break;
-			case KEY_BACKSPACE:
+            case KEY_DOWN:
+                break;
+            case KEY_BACKSPACE:
+            case 8:
 			case 127:
 				if (pos) {
 					wattrset(dialog, dlg.inputbox.atr);
@@ -229,58 +240,10 @@ do_resize:
 			}
 		}
 		switch (key) {
-		case 'O':
-		case 'o':
-			delwin(dialog);
-			return 0;
-		case 'H':
-		case 'h':
-			delwin(dialog);
-			return 1;
-		case KEY_UP:
-		case KEY_LEFT:
-			switch (button) {
-			case -1:
-				button = 1;	/* Indicates "Help" button is selected */
-				print_buttons(dialog, height, width, 1);
-				break;
-			case 0:
-				button = -1;	/* Indicates input box is selected */
-				print_buttons(dialog, height, width, 0);
-				wmove(dialog, box_y, box_x + input_x);
-				wrefresh(dialog);
-				break;
-			case 1:
-				button = 0;	/* Indicates "OK" button is selected */
-				print_buttons(dialog, height, width, 0);
-				break;
-			}
-			break;
-		case TAB:
-		case KEY_DOWN:
-		case KEY_RIGHT:
-			switch (button) {
-			case -1:
-				button = 0;	/* Indicates "OK" button is selected */
-				print_buttons(dialog, height, width, 0);
-				break;
-			case 0:
-				button = 1;	/* Indicates "Help" button is selected */
-				print_buttons(dialog, height, width, 1);
-				break;
-			case 1:
-				button = -1;	/* Indicates input box is selected */
-				print_buttons(dialog, height, width, 0);
-				wmove(dialog, box_y, box_x + input_x);
-				wrefresh(dialog);
-				break;
-			}
-			break;
-		case ' ':
-		case '\n':
-			delwin(dialog);
-			return (button == -1 ? 0 : button);
-		case 'X':
+        case 10:
+        case KEY_ENTER:
+            delwin(dialog);
+            return 0;
 		case 'x':
 			key = KEY_ESC;
 			break;

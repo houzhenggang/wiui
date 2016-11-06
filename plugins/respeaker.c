@@ -69,7 +69,7 @@ static void wifi_site_survey(const char *ifname, const char *essid, int print) {
     char *line, *start;
 
     iwpriv(ifname, "SiteSurvey", (essid ? essid : ""));
-    sleep(5);
+    // sleep(5);
     memset(s, 0x00, IW_SCAN_MAX_DATA);
     strcpy(wrq.ifr_name, ifname);
     wrq.u.data.length = IW_SCAN_MAX_DATA;
@@ -88,7 +88,7 @@ static void wifi_site_survey(const char *ifname, const char *essid, int print) {
 
     line = strtok((char *)start, "\n");
     line = strtok(NULL, "\n");
-    
+
     wifi_count = 0;
     while (line && (wifi_count < 64)) {
         next_field(&line, st[wifi_count].channel, sizeof(st->channel));
@@ -114,32 +114,124 @@ out:
     free(s);
 }
 
-struct wifi_describe * respeaker_scan(int *count) {
+struct wifi_describe* respeaker_scan(int *count) {
     int i;
-    wifi_site_survey("ra0",NULL,0);
+    wifi_site_survey("ra0", NULL, 0);
     struct wifi_describe *wifi_log;
     struct wifi_describe *wifi = (struct wifi_describe *)malloc(wifi_count * (sizeof(struct wifi_describe)));
-    memcpy(wifi, st, wifi_count * (sizeof(struct wifi_describe))); 
+    memcpy(wifi, st, wifi_count * (sizeof(struct wifi_describe)));
     wifi_log = wifi;
 #if 1
     for (i = 0; i < wifi_count; i++) {
         syslog(LOG_INFO, "Found network - %s %s %s %s %s\n",
-       wifi_log->channel, wifi_log->ssid, wifi_log->bssid, wifi_log->security, wifi_log->siganl);
+               wifi_log->channel, wifi_log->ssid, wifi_log->bssid, wifi_log->security, wifi_log->siganl);
         wifi_log++;
     }
 #endif
     *count = wifi_count;
     return  wifi;
 }
+static char isStaGetIP(const char *staname) {
 
-int respeaker_connect(const char *ssid, const char *passwd) {
+    int socket_fd;
+    struct sockaddr_in *sin;
+    struct ifreq ifr;
+    socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (socket_fd == -1) {
+        perror("socket error!\n");
+        return 0;
+    }
+    strcpy(ifr.ifr_name, staname);
+
+    if (ioctl(socket_fd, SIOCGIFADDR, &ifr) < 0) {
+        perror("ioctl error\n");
+        return 0;
+    } else {
+        sin = (struct sockaddr_in *)&(ifr.ifr_addr);
+        syslog(LOG_INFO, "current IP = %s\n", inet_ntoa(sin->sin_addr));
+        return 1;
+    }
 
 }
+
+static struct wifi_describe* wifi_find_ap(const char *name) {
+    int i;
+
+    for (i = 0; i < wifi_count; i++) if (!strcmp(name, (char *)st[i].ssid)) return &st[i];
+
+    return NULL;
+}
+
+
+#define lengthof(x) (sizeof(x) / sizeof(x[0]))
+
+/* This function is heavily similar to the wifi_repeater_start in
+ * net/wifi_core.c from microd (but changed to call ifdown/ifup instead
+ * of fiddling with interface configuration manually. */
+static void wifi_repeater_start(const char *ifname, const char *staname, const char *channel, const char *ssid,
+                                const char *key, const char *enc, const char *crypto) {
+    char buf[100];
+    int enctype = 0;
+
+    iwpriv(ifname, "Channel", channel);
+    iwpriv(staname, "ApCliEnable", "0");
+    if ((strstr(enc, "WPA2PSK") || strstr(enc, "WPAPSKWPA2PSK")) && key) {
+        enctype = 1;
+        iwpriv(staname, "ApCliAuthMode", "WPA2PSK");
+    } else if (strstr(enc, "WPAPSK") && key) {
+        enctype = 1;
+        iwpriv(staname, "ApCliAuthMode", "WPAPSK");
+    } else if (strstr(enc, "WEP") && key) {
+        iwpriv(staname, "ApCliAuthMode", "AUTOWEP");
+        iwpriv(staname, "ApCliEncrypType", "WEP");
+        iwpriv(staname, "ApCliDefaultKeyID", "1");
+        iwpriv(staname, "ApCliKey1", key);
+        iwpriv(staname, "ApCliSsid", ssid);
+    } else if (!key || key[0] == '\0') {
+        iwpriv(staname, "ApCliAuthMode", "NONE");
+        iwpriv(staname, "ApCliSsid", ssid);
+    } else {
+        return;
+    }
+
+    if (enctype) {
+        if (strstr(crypto, "AES") || strstr(crypto, "TKIPAES")) iwpriv(staname, "ApCliEncrypType", "AES");
+        else iwpriv(staname, "ApCliEncrypType", "TKIP");
+        iwpriv(staname, "ApCliSsid", ssid);
+        iwpriv(staname, "ApCliWPAPSK", key);
+    }
+    iwpriv(staname, "ApCliEnable", "1");
+    snprintf(buf, lengthof(buf) - 1, "ifconfig '%s' up", staname);
+    system(buf);
+}
+static int setDefaultSta(const char *ifname, const char *staname, char *essid, char *passwd) {
+    int try_count = 0;
+    while (1) {
+        struct wifi_describe *c;
+        wifi_site_survey(ifname, essid, 0);
+        c = wifi_find_ap(essid);
+        try_count++;
+        if (c) {
+            syslog(LOG_INFO, "Found network, trying to associate (essid: %s, bssid: %s, channel: %s, enc: %s, crypto: %s)\n",
+                   essid, c->ssid, c->channel, c->security, c->crypto);
+
+            wifi_repeater_start(ifname, staname, c->channel, essid, passwd, c->security, c->crypto);
+            if (isStaGetIP(staname)) return 1;
+        } else {
+            syslog(LOG_INFO, "No signal found to connect to\n");
+        }
+        if (try_count == 3) return 0;
+        sleep(1);
+    }
+}
+
+int respeaker_connect(const char *ssid, const char *passwd) {
+    return setDefaultSta("ra0", "apcli0", ssid, passwd);
+}
 wiui* wiui_respeaker() {
-    wiui* w = (wiui*) calloc(1, sizeof(wiui));
+    wiui *w = (wiui *)calloc(1, sizeof(wiui));
     openlog("wiui", 0, 0);
-    if (w == NULL)
-        return NULL;
+    if (w == NULL) return NULL;
     w->scan = &respeaker_scan;
     w->connect = &respeaker_connect;
 

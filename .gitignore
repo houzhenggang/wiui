@@ -15,4 +15,4 @@ install-sh
 missing
 plugins/libwiui.a
 src/wiui
-
+src/wictl
