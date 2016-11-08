@@ -69,7 +69,7 @@ static void wifi_site_survey(const char *ifname, const char *essid, int print) {
     char *line, *start;
 
     iwpriv(ifname, "SiteSurvey", (essid ? essid : ""));
-    // sleep(5);
+    sleep(1);
     memset(s, 0x00, IW_SCAN_MAX_DATA);
     strcpy(wrq.ifr_name, ifname);
     wrq.u.data.length = IW_SCAN_MAX_DATA;
@@ -225,9 +225,53 @@ static int setDefaultSta(const char *ifname, const char *staname, char *essid, c
     }
 }
 
-int respeaker_connect(const char *ssid, const char *passwd) {
-    return setDefaultSta("ra0", "apcli0", ssid, passwd);
+int respeaker_connect(struct wifi_describe *wifi, const char* password) {
+    int wait_count = 3;
+    char cmd[100];
+    wifi_repeater_start("ra0", "apcli0", wifi->channel, wifi->ssid, password,
+                        wifi->security, wifi->crypto); 
+    /*ifconfig staname down*/
+    snprintf(cmd, lengthof(cmd) - 1, "ifconfig  apcli0 down");
+    system(cmd);
+
+    /*ifconfig staname down*/
+    snprintf(cmd, lengthof(cmd) - 1, "ifconfig  apcli0  up");
+    system(cmd);
+
+
+    /*use uci set ssid*/
+    snprintf(cmd, lengthof(cmd) - 1, "uci set wireless.sta.ApCliSsid=%s", wifi->ssid);
+    system(cmd);
+
+     /*use uci set key*/
+    snprintf(cmd, lengthof(cmd) - 1, "uci set wireless.sta.ApCliWPAPSK=%s", password);
+    system(cmd);
+
+     /*uci commit*/
+    snprintf(cmd, lengthof(cmd) - 1, "uci commit");
+    system(cmd);
+
+
+     /*udhcpc -i apcli0*/
+    snprintf(cmd, lengthof(cmd) - 1, "udhcpc -q -i apcli0");
+    system(cmd);
+
+    while (wait_count--) {
+        if (isStaGetIP("apcli0")) {
+            if (wiui_file_exist("/etc/fasterconfig/fasterconfig.lock")) {
+                 /*rm /etc/fasterconfig/fasterconfig.lock*/
+                snprintf(cmd, lengthof(cmd) - 1, "rm /etc/fasterconfig/fasterconfig.lock");
+                system(cmd);
+            }
+            return 1;
+        }
+        sleep(1);
+    }
+    if (wait_count == -1) {
+        return 0;
+    }
 }
+
 wiui* wiui_respeaker() {
     wiui *w = (wiui *)calloc(1, sizeof(wiui));
     openlog("wiui", 0, 0);

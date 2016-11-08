@@ -35,11 +35,12 @@ struct wifi_describe{
 
 typedef  struct {
     struct wifi_describe* (*scan)(int *count);
-    int (*connect)(const char* ssid,const char* passwd);
+    int (*connect)(struct wifi_describe *wifi, const char* password);
 }wiui;
 wiui* get_wifi();
 int  wiui_file_contains(const char *filename, const char *content);
 char* wiui_file_unglob(const char *filename);
+int wiui_file_exist(const char *filename);
 
 wiui* wiui_respeaker();
 #endif
