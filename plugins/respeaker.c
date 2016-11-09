@@ -253,7 +253,7 @@ int respeaker_connect(struct wifi_describe *wifi, const char* password) {
 
 
      /*udhcpc -i apcli0*/
-    snprintf(cmd, lengthof(cmd) - 1, "udhcpc -q -i apcli0");
+    snprintf(cmd, lengthof(cmd) - 1, "udhcpc -n -q -i apcli0");
     system(cmd);
 
     while (wait_count--) {
