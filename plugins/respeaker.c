@@ -262,6 +262,12 @@ int respeaker_connect(struct wifi_describe *wifi, const char* password) {
                  /*rm /etc/fasterconfig/fasterconfig.lock*/
                 snprintf(cmd, lengthof(cmd) - 1, "rm /etc/fasterconfig/fasterconfig.lock");
                 system(cmd);
+                 /*uci set system.@system[0].fasterconfig=0*/
+                snprintf(cmd, lengthof(cmd) - 1, "uci set system.@system[0].fasterconfig=0");
+                system(cmd);
+                 /*uci commit*/
+                snprintf(cmd, lengthof(cmd) - 1, "uci commit");
+                system(cmd);
             }
             return 1;
         }
